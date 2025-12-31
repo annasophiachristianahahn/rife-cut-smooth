@@ -224,12 +224,20 @@ HTML_TEMPLATE = '''
             log.style.display = 'block';
             log.innerHTML = '';
             result.style.display = 'none';
+            result.classList.remove('error');
 
             try {
+                console.log('Submitting video for processing...');
                 const response = await fetch('/process', {
                     method: 'POST',
                     body: formData
                 });
+
+                console.log('Response received:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
@@ -275,6 +283,7 @@ HTML_TEMPLATE = '''
                     }
                 }
             } catch (error) {
+                console.error('Processing error:', error);
                 result.innerHTML = `<h3>❌ Error</h3><p>${error.message}</p>`;
                 result.classList.add('error');
                 result.style.display = 'block';
@@ -283,10 +292,25 @@ HTML_TEMPLATE = '''
                 submitBtn.disabled = false;
             }
         });
+
+        // Check health on page load
+        fetch('/health')
+            .then(r => r.json())
+            .then(data => console.log('Health check:', data))
+            .catch(err => console.error('Health check failed:', err));
     </script>
 </body>
 </html>
 '''
+
+@app.route('/health')
+def health():
+    """Health check endpoint."""
+    from .rife_bridge import check_rife_available
+    return jsonify({
+        'status': 'ok',
+        'rife_available': check_rife_available()
+    })
 
 @app.route('/')
 def index():
