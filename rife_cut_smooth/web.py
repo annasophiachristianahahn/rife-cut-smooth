@@ -6,9 +6,21 @@ from pathlib import Path
 from flask import Flask, request, send_file, render_template_string, jsonify
 import tempfile
 import shutil
+import traceback
 
 from .config import Config
-from .pipeline import Pipeline
+
+# Try to import pipeline - if it fails, the app will still start
+PIPELINE_AVAILABLE = False
+Pipeline = None
+IMPORT_ERROR = None
+try:
+    from .pipeline import Pipeline
+    PIPELINE_AVAILABLE = True
+except Exception as e:
+    IMPORT_ERROR = str(e)
+    print(f"[ERROR] Failed to import Pipeline: {e}")
+    print(traceback.format_exc())
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024  # 2GB max file size
@@ -306,10 +318,23 @@ HTML_TEMPLATE = '''
 @app.route('/health')
 def health():
     """Health check endpoint."""
-    from .rife_bridge import check_rife_available
+    rife_available = False
+    rife_error = None
+
+    if PIPELINE_AVAILABLE:
+        try:
+            from .rife_bridge import check_rife_available
+            rife_available = check_rife_available()
+        except Exception as e:
+            rife_error = str(e)
+    else:
+        rife_error = IMPORT_ERROR
+
     return jsonify({
         'status': 'ok',
-        'rife_available': check_rife_available()
+        'pipeline_available': PIPELINE_AVAILABLE,
+        'rife_available': rife_available,
+        'error': rife_error
     })
 
 @app.route('/')
@@ -325,6 +350,12 @@ def process():
 
     def generate():
         try:
+            # Check if pipeline is available
+            if not PIPELINE_AVAILABLE:
+                error_msg = f"Pipeline not available. Error: {IMPORT_ERROR}"
+                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+                return
+
             # Get uploaded file
             if 'video' not in request.files:
                 yield f"data: {json.dumps({'type': 'error', 'message': 'No video file uploaded'})}\n\n"
