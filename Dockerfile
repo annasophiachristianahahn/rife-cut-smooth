@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     vulkan-tools \
     libvulkan1 \
+    libvulkan-dev \
     build-essential \
     cmake \
     ninja-build \
