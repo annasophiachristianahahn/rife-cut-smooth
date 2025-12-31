@@ -1,0 +1,11 @@
+# Core dependencies
+rife-ncnn-vulkan-python>=1.0.0
+
+# Web server
+Flask>=3.0.0
+
+# Progress display
+tqdm>=4.65.0
+
+# Image processing
+Pillow>=10.0.0
