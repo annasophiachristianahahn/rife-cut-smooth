@@ -1,4 +1,4 @@
-# Web server
+# Web server (v3 - ffprobe fix included)
 Flask>=3.0.0
 
 # Progress display
