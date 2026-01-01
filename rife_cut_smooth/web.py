@@ -274,13 +274,13 @@ HTML_TEMPLATE = '''
         function debugLog(message, data) {
             const timestamp = new Date().toISOString();
             const logEntry = '[' + timestamp + '] ' + message;
-            const fullEntry = data ? logEntry + '\n' + JSON.stringify(data, null, 2) : logEntry;
+            const fullEntry = data ? logEntry + '\\n' + JSON.stringify(data, null, 2) : logEntry;
 
             console.log(message, data || '');
 
             // Get existing logs
             let logs = localStorage.getItem(DEBUG_KEY) || '';
-            logs += fullEntry + '\n\n';
+            logs += fullEntry + '\\n\\n';
             localStorage.setItem(DEBUG_KEY, logs);
 
             // Update UI
@@ -438,7 +438,7 @@ HTML_TEMPLATE = '''
                     const chunk = decoder.decode(value);
                     debugLog('Chunk ' + chunkCount + ' received', {length: chunk.length, preview: chunk.substring(0, 100)});
 
-                    const lines = chunk.split('\n');
+                    const lines = chunk.split('\\n');
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
