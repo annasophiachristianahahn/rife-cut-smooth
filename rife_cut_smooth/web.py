@@ -229,6 +229,15 @@ HTML_TEMPLATE = '''
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // Validate file is selected
+            const fileInput = document.getElementById('video');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                result.innerHTML = `<h3>❌ Error</h3><p>Please select a video file first.</p>`;
+                result.classList.add('error');
+                result.style.display = 'block';
+                return;
+            }
+
             const formData = new FormData(form);
 
             submitBtn.disabled = true;
@@ -259,7 +268,7 @@ HTML_TEMPLATE = '''
                     if (done) break;
 
                     const chunk = decoder.decode(value);
-                    const lines = chunk.split('\\n');
+                    const lines = chunk.split('\n');
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
