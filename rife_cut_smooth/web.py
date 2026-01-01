@@ -535,7 +535,9 @@ def health():
         import inspect
         from . import normalize
         source = inspect.getsource(normalize.get_video_info)
-        if "codec_name,pix_fmt,width,height" in source:
+        if "noprint_wrappers=1" in source and "raw_data.get" in source:
+            normalize_version = "v4_keyvalue"
+        elif "codec_name,pix_fmt,width,height" in source:
             normalize_version = "v3_fixed"
         else:
             normalize_version = "v2_broken"
