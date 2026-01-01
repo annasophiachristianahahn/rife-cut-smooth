@@ -1,4 +1,4 @@
-# RIFE Cut Smooth - Railway Deployment
+# RIFE Cut Smooth - Railway Deployment v3 with ffprobe fix
 FROM python:3.11-slim
 
 # Install system dependencies (ffmpeg for video processing)
