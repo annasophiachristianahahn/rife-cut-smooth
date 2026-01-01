@@ -255,15 +255,19 @@ HTML_TEMPLATE = '''
 
         <div class="debug-panel">
             <h3>🐛 Debug Console (Persistent)</h3>
-            <div class="debug-log" id="debugLog"></div>
+            <div class="debug-log" id="debugLog">WAITING FOR JAVASCRIPT TO LOAD...</div>
             <div class="debug-buttons">
                 <button type="button" onclick="copyDebugLogs()">📋 Copy Logs</button>
                 <button type="button" onclick="clearDebugLogs()">🗑️ Clear Logs</button>
             </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #856404;">
+                <strong>Script Status:</strong> <span id="scriptStatus">NOT LOADED</span>
+            </p>
         </div>
     </div>
 
     <script>
+        document.getElementById('scriptStatus').textContent = 'LOADING...';
         // Persistent debug logging system
         const DEBUG_KEY = 'rife-debug-logs';
 
@@ -499,6 +503,7 @@ HTML_TEMPLATE = '''
 
             debugLog('Script initialization complete');
             updateDebugDisplay();
+            document.getElementById('scriptStatus').textContent = 'LOADED ✓';
         })();
     </script>
 </body>
