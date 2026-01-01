@@ -1,4 +1,7 @@
-"""Web interface for RIFE Cut Smooth on Railway."""
+"""Web interface for RIFE Cut Smooth on Railway.
+
+Fixed Flask request context error - Railway deployment v2.
+"""
 
 import os
 import sys
