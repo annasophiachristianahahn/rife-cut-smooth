@@ -546,48 +546,54 @@ def process():
     import json
     from flask import Response
 
+    # Extract ALL request data BEFORE entering generator (request context issue)
+    if not PIPELINE_AVAILABLE:
+        error_msg = f"Pipeline not available. Error: {IMPORT_ERROR}"
+        return Response(
+            f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n",
+            mimetype='text/event-stream'
+        )
+
+    # Get uploaded file
+    if 'video' not in request.files:
+        return Response(
+            f"data: {json.dumps({'type': 'error', 'message': 'No video file uploaded'})}\n\n",
+            mimetype='text/event-stream'
+        )
+
+    video = request.files['video']
+    if video.filename == '':
+        return Response(
+            f"data: {json.dumps({'type': 'error', 'message': 'No file selected'})}\n\n",
+            mimetype='text/event-stream'
+        )
+
+    # Get parameters
+    fps = float(request.form.get('fps', 30))
+    threshold = float(request.form.get('threshold', 0.30))
+    bridge = float(request.form.get('bridge', 0.5))
+    audio_mode = request.form.get('audio', 'keep-original')
+
+    # Save uploaded file
+    input_path = os.path.join(app.config['UPLOAD_FOLDER'], video.filename)
+    video.save(input_path)
+
+    # Create output path
+    output_filename = Path(video.filename).stem + '__rife_smooth.mp4'
+    output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+
+    # Create config
+    config = Config(
+        fps=fps,
+        scene_threshold=threshold,
+        bridge_duration=bridge,
+        audio_mode=audio_mode,
+    )
+
     def generate():
         try:
-            # Check if pipeline is available
-            if not PIPELINE_AVAILABLE:
-                error_msg = f"Pipeline not available. Error: {IMPORT_ERROR}"
-                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
-                return
-
-            # Get uploaded file
-            if 'video' not in request.files:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No video file uploaded'})}\n\n"
-                return
-
-            video = request.files['video']
-            if video.filename == '':
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No file selected'})}\n\n"
-                return
-
-            # Get parameters
-            fps = float(request.form.get('fps', 30))
-            threshold = float(request.form.get('threshold', 0.30))
-            bridge = float(request.form.get('bridge', 0.5))
-            audio_mode = request.form.get('audio', 'keep-original')
-
-            # Save uploaded file
-            input_path = os.path.join(app.config['UPLOAD_FOLDER'], video.filename)
-            video.save(input_path)
-
             yield f"data: {json.dumps({'type': 'log', 'message': f'Uploaded: {video.filename}'})}\n\n"
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Uploaded file', 'percent': 5})}\n\n"
-
-            # Create output path
-            output_filename = Path(video.filename).stem + '__rife_smooth.mp4'
-            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-
-            # Create config
-            config = Config(
-                fps=fps,
-                scene_threshold=threshold,
-                bridge_duration=bridge,
-                audio_mode=audio_mode,
-            )
 
             yield f"data: {json.dumps({'type': 'log', 'message': 'Starting pipeline...'})}\n\n"
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Initializing', 'percent': 10})}\n\n"
