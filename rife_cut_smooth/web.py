@@ -232,7 +232,7 @@ HTML_TEMPLATE = '''
             // Validate file is selected
             const fileInput = document.getElementById('video');
             if (!fileInput.files || fileInput.files.length === 0) {
-                result.innerHTML = `<h3>❌ Error</h3><p>Please select a video file first.</p>`;
+                result.innerHTML = '<h3>❌ Error</h3><p>Please select a video file first.</p>';
                 result.classList.add('error');
                 result.style.display = 'block';
                 return;
@@ -257,7 +257,7 @@ HTML_TEMPLATE = '''
                 console.log('Response received:', response.status);
 
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    throw new Error('Server error: ' + response.status + ' ' + response.statusText);
                 }
 
                 const reader = response.body.getReader();
@@ -285,17 +285,15 @@ HTML_TEMPLATE = '''
                                     progressFill.style.width = data.percent + '%';
                                 }
                             } else if (data.type === 'complete') {
-                                result.innerHTML = `
-                                    <h3>✅ Success!</h3>
-                                    <p>${data.message}</p>
-                                    <a href="/download/${data.filename}" download>
-                                        <button>⬇️ Download Processed Video</button>
-                                    </a>
-                                `;
+                                result.innerHTML = '<h3>✅ Success!</h3>' +
+                                    '<p>' + data.message + '</p>' +
+                                    '<a href="/download/' + data.filename + '" download>' +
+                                        '<button>⬇️ Download Processed Video</button>' +
+                                    '</a>';
                                 result.style.display = 'block';
                                 progress.style.display = 'none';
                             } else if (data.type === 'error') {
-                                result.innerHTML = `<h3>❌ Error</h3><p>${data.message}</p>`;
+                                result.innerHTML = '<h3>❌ Error</h3><p>' + data.message + '</p>';
                                 result.classList.add('error');
                                 result.style.display = 'block';
                                 progress.style.display = 'none';
@@ -305,7 +303,7 @@ HTML_TEMPLATE = '''
                 }
             } catch (error) {
                 console.error('Processing error:', error);
-                result.innerHTML = `<h3>❌ Error</h3><p>${error.message}</p>`;
+                result.innerHTML = '<h3>❌ Error</h3><p>' + error.message + '</p>';
                 result.classList.add('error');
                 result.style.display = 'block';
                 progress.style.display = 'none';
