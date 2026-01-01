@@ -88,7 +88,7 @@ def get_video_info(video_path: str) -> dict:
         "-v", "error",
         "-select_streams", "v:0",
         "-show_entries",
-        "stream=r_frame_rate,avg_frame_rate,duration,width,height,codec_name,pix_fmt",
+        "stream=codec_name,pix_fmt,width,height,r_frame_rate,avg_frame_rate,duration",
         "-of", "default=nw=1:nk=1",
         video_path,
     ]
