@@ -529,10 +529,24 @@ def health():
     else:
         rife_error = IMPORT_ERROR
 
+    # Debug: Check normalize.py ffprobe command
+    normalize_version = "unknown"
+    try:
+        import inspect
+        from . import normalize
+        source = inspect.getsource(normalize.get_video_info)
+        if "codec_name,pix_fmt,width,height" in source:
+            normalize_version = "v3_fixed"
+        else:
+            normalize_version = "v2_broken"
+    except Exception as e:
+        normalize_version = f"error: {e}"
+
     return jsonify({
         'status': 'ok',
         'pipeline_available': PIPELINE_AVAILABLE,
         'rife_available': rife_available,
+        'normalize_version': normalize_version,
         'error': rife_error
     })
 
