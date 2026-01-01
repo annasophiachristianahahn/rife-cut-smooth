@@ -589,12 +589,8 @@ def process():
             yield f"data: {json.dumps({'type': 'log', 'message': 'Starting pipeline...'})}\n\n"
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Initializing', 'percent': 10})}\n\n"
 
-            # Progress callback
-            def progress_callback(msg):
-                yield f"data: {json.dumps({'type': 'log', 'message': msg})}\n\n"
-
-            # Run pipeline
-            pipeline = Pipeline(config, progress_callback=progress_callback)
+            # Run pipeline (no progress callback for now - simplify)
+            pipeline = Pipeline(config, progress_callback=None)
 
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Processing video', 'percent': 20})}\n\n"
 
