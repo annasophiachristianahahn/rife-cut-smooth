@@ -105,9 +105,15 @@ def get_video_info(video_path: str) -> dict:
 
     lines = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
+    # Debug logging
+    print(f"[DEBUG] ffprobe output lines ({len(lines)} total):")
+    for i, line in enumerate(lines):
+        print(f"  [{i}] {repr(line)}")
+
     # Parse output
     info = {}
     if len(lines) >= 7:
+        print(f"[DEBUG] Parsing: codec=lines[0], pix_fmt=lines[1], width=int(lines[2]), height=int(lines[3])")
         info["codec"] = lines[0]
         info["pix_fmt"] = lines[1]
         info["width"] = int(lines[2])
