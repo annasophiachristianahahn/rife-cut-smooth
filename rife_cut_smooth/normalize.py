@@ -113,11 +113,17 @@ def get_video_info(video_path: str) -> dict:
     # Parse output
     info = {}
     if len(lines) >= 7:
-        print(f"[DEBUG] Parsing: codec=lines[0], pix_fmt=lines[1], width=int(lines[2]), height=int(lines[3])")
+        print(f"[DEBUG] Parsing: codec=lines[0], pix_fmt=lines[1], width=int(lines[2]), height=int(lines[3])", flush=True)
         info["codec"] = lines[0]
         info["pix_fmt"] = lines[1]
-        info["width"] = int(lines[2])
-        info["height"] = int(lines[3])
+        try:
+            info["width"] = int(lines[2])
+        except ValueError as e:
+            raise ValueError(f"Cannot convert width lines[2]={repr(lines[2])} to int. All lines: {lines}") from e
+        try:
+            info["height"] = int(lines[3])
+        except ValueError as e:
+            raise ValueError(f"Cannot convert height lines[3]={repr(lines[3])} to int. All lines: {lines}") from e
         info["r_frame_rate"] = lines[4]
         info["avg_frame_rate"] = lines[5]
         try:
