@@ -1,4 +1,4 @@
-# Web server (v3 - ffprobe fix included)
+# Web server (v5 - cut detection logging)
 Flask>=3.0.0
 
 # Progress display

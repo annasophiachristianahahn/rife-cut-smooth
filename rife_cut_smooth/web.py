@@ -620,7 +620,28 @@ def process():
 
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Processing video', 'percent': 20})}\n\n"
 
-            result_path = pipeline.run(input_path, output_path)
+            # Capture cut detection info
+            import sys
+            from io import StringIO
+            old_stdout = sys.stdout
+            sys.stdout = captured_output = StringIO()
+
+            try:
+                result_path = pipeline.run(input_path, output_path)
+                output_text = captured_output.getvalue()
+            finally:
+                sys.stdout = old_stdout
+
+            # Parse output for cut detection info
+            cut_count_msg = ""
+            for line in output_text.split('\\n'):
+                if 'Detected' in line and 'cuts' in line:
+                    cut_count_msg = line.strip()
+                    yield f"data: {json.dumps({'type': 'log', 'message': cut_count_msg})}\n\n"
+                elif 'NO CUTS DETECTED' in line:
+                    yield f"data: {json.dumps({'type': 'log', 'message': 'NO CUTS DETECTED - Try lowering the scene threshold to 0.10-0.15'})}\n\n"
+                elif 'Processing' in line and 'valid cuts' in line:
+                    yield f"data: {json.dumps({'type': 'log', 'message': line.strip()})}\n\n"
 
             yield f"data: {json.dumps({'type': 'progress', 'message': 'Complete!', 'percent': 100})}\n\n"
             yield f"data: {json.dumps({'type': 'complete', 'message': 'Video processed successfully!', 'filename': output_filename})}\n\n"
