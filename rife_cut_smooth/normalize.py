@@ -89,7 +89,7 @@ def get_video_info(video_path: str) -> dict:
         "-select_streams", "v:0",
         "-show_entries",
         "stream=codec_name,pix_fmt,width,height,r_frame_rate,avg_frame_rate,duration",
-        "-of", "default=nw=1:nk=1",
+        "-of", "default=noprint_wrappers=1",  # Output key=value pairs
         video_path,
     ]
 
@@ -105,31 +105,36 @@ def get_video_info(video_path: str) -> dict:
 
     lines = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
-    # Debug logging
-    print(f"[DEBUG] ffprobe output lines ({len(lines)} total):")
-    for i, line in enumerate(lines):
-        print(f"  [{i}] {repr(line)}")
+    # Parse key=value pairs into dict
+    raw_data = {}
+    for line in lines:
+        if '=' in line:
+            key, value = line.split('=', 1)
+            raw_data[key] = value
 
-    # Parse output
+    # Extract fields by name (not by position - ffprobe returns alphabetically!)
     info = {}
-    if len(lines) >= 7:
-        print(f"[DEBUG] Parsing: codec=lines[0], pix_fmt=lines[1], width=int(lines[2]), height=int(lines[3])", flush=True)
-        info["codec"] = lines[0]
-        info["pix_fmt"] = lines[1]
-        try:
-            info["width"] = int(lines[2])
-        except ValueError as e:
-            raise ValueError(f"Cannot convert width lines[2]={repr(lines[2])} to int. All lines: {lines}") from e
-        try:
-            info["height"] = int(lines[3])
-        except ValueError as e:
-            raise ValueError(f"Cannot convert height lines[3]={repr(lines[3])} to int. All lines: {lines}") from e
-        info["r_frame_rate"] = lines[4]
-        info["avg_frame_rate"] = lines[5]
-        try:
-            info["duration"] = float(lines[6])
-        except (ValueError, IndexError):
-            info["duration"] = None
+    info["codec"] = raw_data.get("codec_name", "")
+    info["pix_fmt"] = raw_data.get("pix_fmt", "")
+
+    try:
+        info["width"] = int(raw_data.get("width", 0))
+    except ValueError as e:
+        raise ValueError(f"Cannot convert width={repr(raw_data.get('width'))} to int. Raw data: {raw_data}") from e
+
+    try:
+        info["height"] = int(raw_data.get("height", 0))
+    except ValueError as e:
+        raise ValueError(f"Cannot convert height={repr(raw_data.get('height'))} to int. Raw data: {raw_data}") from e
+
+    info["r_frame_rate"] = raw_data.get("r_frame_rate", "")
+    info["avg_frame_rate"] = raw_data.get("avg_frame_rate", "")
+
+    try:
+        duration_str = raw_data.get("duration")
+        info["duration"] = float(duration_str) if duration_str else None
+    except (ValueError, TypeError):
+        info["duration"] = None
 
     # Calculate FPS
     if info.get("avg_frame_rate"):
