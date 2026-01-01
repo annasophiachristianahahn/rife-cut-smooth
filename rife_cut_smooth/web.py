@@ -471,7 +471,7 @@ HTML_TEMPLATE = '''
                         }
                     }
                 }
-            } catch (error) {
+                } catch (error) {
                 debugLog('ERROR during processing', {
                     message: error.message,
                     stack: error.stack,
