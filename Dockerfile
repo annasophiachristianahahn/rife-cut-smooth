@@ -1,4 +1,4 @@
-# RIFE Cut Smooth - Railway Deployment v4 (ffprobe key=value parsing)
+# RIFE Cut Smooth - Railway Deployment v6 (RIFE model auto-download)
 FROM python:3.11-slim
 
 # Install system dependencies (ffmpeg for video processing)

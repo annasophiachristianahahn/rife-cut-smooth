@@ -1,4 +1,4 @@
-# Web server (v5 - cut detection logging)
+# Web server (v6 - RIFE model auto-download)
 Flask>=3.0.0
 
 # Progress display
@@ -10,3 +10,6 @@ Pillow>=10.0.0
 # Deep learning for RIFE
 torch>=2.0.0
 numpy>=1.24.0
+
+# Model downloading
+gdown>=4.7.1
