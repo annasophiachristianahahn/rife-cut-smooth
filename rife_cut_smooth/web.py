@@ -123,7 +123,44 @@ HTML_TEMPLATE = '''
             max-height: 400px;
             overflow-y: auto;
             margin-top: 20px;
-            display: none;
+        }
+        .debug-panel {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .debug-panel h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .debug-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 10px 0;
+        }
+        .debug-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .debug-buttons button {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .debug-buttons button:hover {
+            background: #e0a800;
         }
         .result {
             margin-top: 20px;
@@ -215,11 +252,70 @@ HTML_TEMPLATE = '''
         <div class="log" id="log"></div>
 
         <div class="result" id="result"></div>
+
+        <div class="debug-panel">
+            <h3>🐛 Debug Console (Persistent)</h3>
+            <div class="debug-log" id="debugLog"></div>
+            <div class="debug-buttons">
+                <button type="button" onclick="copyDebugLogs()">📋 Copy Logs</button>
+                <button type="button" onclick="clearDebugLogs()">🗑️ Clear Logs</button>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Persistent debug logging system
+        const DEBUG_KEY = 'rife-debug-logs';
+
+        function debugLog(message, data) {
+            const timestamp = new Date().toISOString();
+            const logEntry = '[' + timestamp + '] ' + message;
+            const fullEntry = data ? logEntry + '\n' + JSON.stringify(data, null, 2) : logEntry;
+
+            console.log(message, data || '');
+
+            // Get existing logs
+            let logs = localStorage.getItem(DEBUG_KEY) || '';
+            logs += fullEntry + '\n\n';
+            localStorage.setItem(DEBUG_KEY, logs);
+
+            // Update UI
+            updateDebugDisplay();
+        }
+
+        function updateDebugDisplay() {
+            const debugLogEl = document.getElementById('debugLog');
+            if (debugLogEl) {
+                debugLogEl.textContent = localStorage.getItem(DEBUG_KEY) || 'No logs yet...';
+                debugLogEl.scrollTop = debugLogEl.scrollHeight;
+            }
+        }
+
+        function copyDebugLogs() {
+            const logs = localStorage.getItem(DEBUG_KEY) || 'No logs available';
+            navigator.clipboard.writeText(logs).then(function() {
+                alert('Logs copied to clipboard!');
+            }).catch(function(err) {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        function clearDebugLogs() {
+            localStorage.removeItem(DEBUG_KEY);
+            updateDebugDisplay();
+            debugLog('Logs cleared');
+        }
+
+        // Make functions global
+        window.copyDebugLogs = copyDebugLogs;
+        window.clearDebugLogs = clearDebugLogs;
+
         (function() {
-            console.log('Script loaded');
+            debugLog('=== PAGE LOAD ===');
+            debugLog('Script execution started');
+            debugLog('User Agent', {userAgent: navigator.userAgent});
+            debugLog('Page URL', {url: window.location.href});
+
             const form = document.getElementById('uploadForm');
             const submitBtn = document.getElementById('submitBtn');
             const progress = document.getElementById('progress');
@@ -228,60 +324,116 @@ HTML_TEMPLATE = '''
             const log = document.getElementById('log');
             const result = document.getElementById('result');
 
-            console.log('Form element:', form);
-
-            if (!form) {
-                console.error('Form not found!');
-                return;
-            }
-
-            form.addEventListener('submit', function(e) {
-                console.log('Form submitted - preventing default');
-                e.preventDefault();
-                handleSubmit(e);
+            debugLog('DOM elements found', {
+                form: !!form,
+                submitBtn: !!submitBtn,
+                progress: !!progress,
+                result: !!result
             });
 
-            async function handleSubmit(e) {
-
-            // Validate file is selected
-            const fileInput = document.getElementById('video');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                result.innerHTML = '<h3>❌ Error</h3><p>Please select a video file first.</p>';
-                result.classList.add('error');
-                result.style.display = 'block';
+            if (!form) {
+                debugLog('ERROR: Form element not found!');
                 return;
             }
 
-            const formData = new FormData(form);
+            debugLog('Attaching form submit listener');
 
-            submitBtn.disabled = true;
-            progress.style.display = 'block';
-            log.style.display = 'block';
-            log.innerHTML = '';
-            result.style.display = 'none';
-            result.classList.remove('error');
-
-            try {
-                console.log('Submitting video for processing...');
-                const response = await fetch('/process', {
-                    method: 'POST',
-                    body: formData
+            form.addEventListener('submit', function(e) {
+                debugLog('=== FORM SUBMIT EVENT ===');
+                debugLog('Event object', {
+                    type: e.type,
+                    target: e.target.id,
+                    defaultPrevented: e.defaultPrevented
                 });
 
-                console.log('Response received:', response.status);
+                e.preventDefault();
+                debugLog('preventDefault() called', {nowDefaultPrevented: e.defaultPrevented});
+
+                try {
+                    handleSubmit(e);
+                } catch (err) {
+                    debugLog('ERROR in handleSubmit', {
+                        message: err.message,
+                        stack: err.stack
+                    });
+                }
+            });
+
+            debugLog('Form listener attached successfully');
+
+            async function handleSubmit(e) {
+                debugLog('handleSubmit() started');
+
+                // Validate file is selected
+                const fileInput = document.getElementById('video');
+                debugLog('File input check', {
+                    found: !!fileInput,
+                    hasFiles: !!(fileInput && fileInput.files),
+                    fileCount: fileInput ? fileInput.files.length : 0
+                });
+
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    debugLog('No file selected - showing error');
+                    result.innerHTML = '<h3>❌ Error</h3><p>Please select a video file first.</p>';
+                    result.classList.add('error');
+                    result.style.display = 'block';
+                    return;
+                }
+
+                const selectedFile = fileInput.files[0];
+                debugLog('File selected', {
+                    name: selectedFile.name,
+                    size: selectedFile.size,
+                    type: selectedFile.type
+                });
+
+                const formData = new FormData(form);
+                debugLog('FormData created');
+
+                submitBtn.disabled = true;
+                progress.style.display = 'block';
+                log.style.display = 'block';
+                log.innerHTML = '';
+                result.style.display = 'none';
+                result.classList.remove('error');
+                debugLog('UI updated for processing');
+
+                try {
+                    debugLog('Starting fetch to /process');
+                    const response = await fetch('/process', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    debugLog('Response received', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        headers: Object.fromEntries(response.headers.entries())
+                    });
 
                 if (!response.ok) {
+                    debugLog('Response not OK, throwing error');
                     throw new Error('Server error: ' + response.status + ' ' + response.statusText);
                 }
 
+                debugLog('Starting to read response stream');
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let chunkCount = 0;
 
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) break;
+                    chunkCount++;
+
+                    if (done) {
+                        debugLog('Stream complete', {totalChunks: chunkCount});
+                        break;
+                    }
 
                     const chunk = decoder.decode(value);
+                    debugLog('Chunk ' + chunkCount + ' received', {length: chunk.length, preview: chunk.substring(0, 100)});
+
                     const lines = chunk.split('\n');
 
                     for (const line of lines) {
@@ -316,21 +468,37 @@ HTML_TEMPLATE = '''
                     }
                 }
             } catch (error) {
-                console.error('Processing error:', error);
+                debugLog('ERROR during processing', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 result.innerHTML = '<h3>❌ Error</h3><p>' + error.message + '</p>';
                 result.classList.add('error');
                 result.style.display = 'block';
                 progress.style.display = 'none';
             } finally {
                 submitBtn.disabled = false;
+                debugLog('Processing complete - submit button re-enabled');
             }
             }
 
             // Check health on page load
+            debugLog('Fetching health check');
             fetch('/health')
-                .then(r => r.json())
-                .then(data => console.log('Health check:', data))
-                .catch(err => console.error('Health check failed:', err));
+                .then(function(r) {
+                    debugLog('Health check response', {status: r.status});
+                    return r.json();
+                })
+                .then(function(data) {
+                    debugLog('Health check data', data);
+                })
+                .catch(function(err) {
+                    debugLog('Health check ERROR', {message: err.message, stack: err.stack});
+                });
+
+            debugLog('Script initialization complete');
+            updateDebugDisplay();
         })();
     </script>
 </body>
