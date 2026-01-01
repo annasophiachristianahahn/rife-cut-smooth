@@ -204,7 +204,7 @@ HTML_TEMPLATE = '''
             </ul>
         </div>
 
-        <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+        <form id="uploadForm" class="upload-form" enctype="multipart/form-data" onsubmit="return false;">
             <div class="form-group">
                 <label for="video">Video File:</label>
                 <input type="file" id="video" name="video" accept="video/*" required>
