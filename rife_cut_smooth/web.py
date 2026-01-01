@@ -218,16 +218,30 @@ HTML_TEMPLATE = '''
     </div>
 
     <script>
-        const form = document.getElementById('uploadForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const progress = document.getElementById('progress');
-        const progressFill = document.getElementById('progressFill');
-        const statusText = document.getElementById('statusText');
-        const log = document.getElementById('log');
-        const result = document.getElementById('result');
+        (function() {
+            console.log('Script loaded');
+            const form = document.getElementById('uploadForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const progress = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const statusText = document.getElementById('statusText');
+            const log = document.getElementById('log');
+            const result = document.getElementById('result');
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            console.log('Form element:', form);
+
+            if (!form) {
+                console.error('Form not found!');
+                return;
+            }
+
+            form.addEventListener('submit', function(e) {
+                console.log('Form submitted - preventing default');
+                e.preventDefault();
+                handleSubmit(e);
+            });
+
+            async function handleSubmit(e) {
 
             // Validate file is selected
             const fileInput = document.getElementById('video');
@@ -310,13 +324,14 @@ HTML_TEMPLATE = '''
             } finally {
                 submitBtn.disabled = false;
             }
-        });
+            }
 
-        // Check health on page load
-        fetch('/health')
-            .then(r => r.json())
-            .then(data => console.log('Health check:', data))
-            .catch(err => console.error('Health check failed:', err));
+            // Check health on page load
+            fetch('/health')
+                .then(r => r.json())
+                .then(data => console.log('Health check:', data))
+                .catch(err => console.error('Health check failed:', err));
+        })();
     </script>
 </body>
 </html>
